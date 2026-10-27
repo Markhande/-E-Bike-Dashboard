@@ -4,6 +4,13 @@ A landscape Android dashboard built with Kotlin and Jetpack Compose. It displays
 
 No vehicle hardware, CAN integration, backend, or account setup is required to run the demo.
 
+This README describes the inspected implementation. For the detailed, proposed real-vehicle migration, see [VHAL integration guide](VHAL_INTEGRATION.md). VHAL support is not implemented in the current app.
+
+## Documentation map
+
+- This README: current features, source walkthrough, setup, simulation, tests and submission status.
+- [VHAL integration guide](VHAL_INTEGRATION.md): AAOS prerequisites, OEM property contracts, permissions, connection lifecycle, Flow adapter design, domain models, freshness, DI replacement and verification.
+
 ## Features
 
 - Speedometer with a numeric km/h reading and animated gauge.
@@ -106,6 +113,60 @@ DashboardContent and reusable cards
 
 The project uses one Gradle app module with separate packages for UI, state management, and the data provider. `DashboardContent` accepts a state value directly, allowing Compose previews without constructing a Hilt ViewModel.
 
+### Source walkthrough
+
+All application Kotlin files are under `app/src/main/java/com/myworkshopy/vdash/`.
+
+| File | What happens there |
+| --- | --- |
+| `VehicleHmiApplication.kt` | Application entry point annotated with HiltAndroidApp |
+| `MainActivity.kt` | Hilt-enabled activity; installs the theme and Compose dashboard and hides system bars |
+| `model/VehicleUiState.kt` | Immutable readings, ride-state labels, signal status and invalid-speed marker |
+| `repository/VehicleRepository.kt` | Exposes observeVehicleState(): Flow<VehicleUiState> |
+| `repository/SimulatedVehicleRepository.kt` | Cold Flow emits five snapshots repeatedly with a delay |
+| `di/VehicleModule.kt` | Supplies the simulated implementation through the repository interface |
+| `viewmodel/VehicleViewModel.kt` | Launches collection in viewModelScope and exposes read-only StateFlow |
+| `view/HomeScreen.kt` | Collects state with lifecycle awareness; selects live or unavailable content |
+| `view/SpeedoMeter.kt` | Canvas-rendered ticks, labels and animated colored arc; numeric speed readout |
+| `view/MotorStatusCard.kt` | Motor status and lightning symbol |
+| `view/KillSwitchCard.kt` | Kill-switch status and shield symbol |
+| `view/RideStatusCard.kt` | Current scenario plus motor and kill-switch summary |
+| `view/RideSequenceCard.kt` | Highlights the current scenario in the five-step sequence |
+| `view/MetricsBar.kt` | Vector icons, fixed demo metrics and battery progress bar |
+| `ui/theme/` | Compose theme, color definitions and typography |
+
+The gauge uses an animated arc, not a moving needle. Its animation affects presentation; it does not create new vehicle measurements.
+
+### One update, end to end
+
+1. The repository emits the RIDING snapshot: speed 25, motor ON, kill switch inactive.
+2. VehicleViewModel validates speed, clears any previous invalid-speed flag when appropriate, and marks the sample LIVE.
+3. The ViewModel updates its private MutableStateFlow and restarts the watchdog.
+4. Dashboard observes the public StateFlow using collectAsStateWithLifecycle.
+5. DashboardContent passes the same snapshot to the relevant cards and gauge.
+6. Compose renders the new values and the gauge animates toward the new reading.
+
+The child cards receive parameters; they do not each subscribe to the repository. The simulator and ViewModel currently share VehicleUiState rather than separate raw-data and presentation models.
+
+### Lifecycle and ownership
+
+The ViewModel starts one collection during initialization. Collection and watchdog jobs belong to viewModelScope and are cancelled when the ViewModel is cleared. UI collection is lifecycle-aware, but the repository collection in the current ViewModel is not explicitly stopped whenever the screen enters the background.
+
+The cold simulation starts from PARKED on each new subscription. There is no persisted trip state. The repository emits snapshots; it does not manage the screen or animation.
+
+### Signal status transitions
+
+| Current situation | Next state |
+| --- | --- |
+| ViewModel created | WAITING |
+| First or later sample received | LIVE |
+| No first sample within 3 seconds | UNAVAILABLE |
+| No next sample within 3 seconds after a valid sample | STALE |
+| A new sample arrives while the stream is still active | LIVE |
+| Stream throws or completes | UNAVAILABLE |
+
+After stream failure/completion, the existing collector does not automatically reconnect. Cancellation is rethrown rather than treated as a provider error.
+
 For a future real vehicle source, implement `VehicleRepository` and change the binding in `VehicleModule`. Connection management and protocol decoding belong in the data layer. A separate raw vehicle-data model would be a useful next step for production integration; the current demo shares `VehicleUiState` between the provider and ViewModel.
 
 ## Simulation
@@ -190,12 +251,12 @@ On a landscape Android emulator:
 
 The unit tests exercise the timeout and error paths using controlled providers. The default simulator does not deliberately inject failures. There is no dedicated automated dashboard UI test suite, and final emulator visual acceptance remains to be completed.
 
+## Assumptions and limitations
 
-## Submission checklist
-
-- [ ] Correct the one-second sequence test timing and rerun all unit tests.
-- [ ] Build the latest source with `./gradlew :app:assembleDebug`.
-- [ ] Complete the landscape emulator acceptance check.
-- [ ] Include source code, Gradle wrapper, build configuration, tests, and this README.
-- [ ] Exclude generated build directories, local SDK paths, and machine-specific files.
-- [ ] Provide the GitHub repository URL to the reviewer.
+- This is an HMI demonstration, not production vehicle-control software.
+- The speedometer scale is 0-120 km/h; the current gauge implementation clamps displayed speed to that range.
+- Ride scenarios come from the simulated provider rather than being inferred from speed or motor status.
+- Readings use integer speed values and a fixed three-second freshness timeout.
+- The dashboard is designed for landscape and scales from a reference layout; small displays and enlarged system fonts need visual checks.
+- Odometer, battery, estimated range, and temperature are static dummy values.
+- No hardware transport, persistence, backend integration, or automatic retry after a terminated stream is implemented.
