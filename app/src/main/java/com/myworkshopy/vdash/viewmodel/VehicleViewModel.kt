@@ -62,7 +62,6 @@ class VehicleViewModel @Inject constructor(
     }
 
     companion object {
-        // Three missed one-second samples are treated as a lost signal.
         const val STALE_AFTER_MS = 3_000L
     }
 }

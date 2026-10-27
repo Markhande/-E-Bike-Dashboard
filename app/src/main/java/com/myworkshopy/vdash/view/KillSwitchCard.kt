@@ -67,10 +67,9 @@ fun KillSwitchCard(
             .padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Circular shield icon
         Box(
             modifier = Modifier
-                .size(96.dp)
+                .size(90.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF031321))
                 .border(

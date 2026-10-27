@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,13 +61,13 @@ fun MotorStatusCard(
                 ),
                 shape = CardShape
             )
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 19.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Circular lightning icon
         Box(
             modifier = Modifier
-                .size(96.dp)
+                .size(90.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF031A13))
                 .border(
@@ -100,7 +101,8 @@ fun MotorStatusCard(
                     text = "×",
                     color = statusColor,
                     fontSize = 48.sp,
-                    fontWeight = FontWeight.Light
+                    fontWeight = FontWeight.Light,
+                    textAlign = TextAlign.Center
                 )
             }
         }

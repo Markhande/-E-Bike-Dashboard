@@ -62,7 +62,7 @@ class VehicleViewModelTest {
         VehicleViewModel(repository).also { store.put("vehicle", it) }
 
     @Test
-    fun simulationUpdatesAllFiveStatesEverySecondAndLoops() = vehicleTest {
+    fun simulationUpdatesAllFiveStatesEveryTwoSecondsAndLoops() = vehicleTest {
         val vm = model(SimulatedVehicleRepository())
         val expected = listOf(
             VehicleUiState(false, false, 0, RideState.PARKED),
@@ -74,7 +74,7 @@ class VehicleViewModelTest {
         runCurrent()
         expected.forEach { sample ->
             assertEquals(sample, vm.uiState.value)
-            advanceTimeBy(999)
+            advanceTimeBy(1_999)
             runCurrent()
             assertEquals("No early update", sample, vm.uiState.value)
             advanceTimeBy(1)

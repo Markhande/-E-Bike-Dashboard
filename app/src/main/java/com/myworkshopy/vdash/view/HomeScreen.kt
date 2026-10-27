@@ -44,20 +44,20 @@ fun Dashboard(
     DashboardContent(viewModel.uiState.collectAsStateWithLifecycle().value, modifier)
 }
 
-// No ViewModel dependency here: previews and all cards share one state snapshot.
 @Composable
 fun DashboardContent(uiState: VehicleUiState, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         HomeScreenBackground()
         val density = LocalDensity.current
-        val scale = minOf(maxWidth / 1120.dp, maxHeight / 432.dp).coerceAtLeast(0.01f)
+        val scale = minOf(maxWidth / 1120.dp, maxHeight / 544.dp).coerceAtLeast(0.01f)
         CompositionLocalProvider(
             LocalDensity provides Density(density.density * scale, density.fontScale)
         ) {
-            Box(Modifier.requiredSize(1120.dp, 432.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.requiredSize(1120.dp, 544.dp), contentAlignment = Alignment.Center) {
                 if (uiState.signalStatus == SignalStatus.LIVE) {
+                    Column(Modifier.fillMaxSize()) {
                     Row(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().height(432.dp).padding(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -69,7 +69,7 @@ fun DashboardContent(uiState: VehicleUiState, modifier: Modifier = Modifier) {
                             Spacer(modifier = Modifier.weight(0.5f))
                             KillSwitchCard(uiState.killSwitchActive, Modifier.fillMaxWidth())
                         }
-                        Speedometer(uiState.speed, Modifier.width(500.dp))
+                        Speedometer(uiState.speed, Modifier.padding(top = 60.dp).width(500.dp))
                         Column(
                             Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -84,6 +84,14 @@ fun DashboardContent(uiState: VehicleUiState, modifier: Modifier = Modifier) {
                             RideSequenceCard(uiState.rideState.ordinal, Modifier.fillMaxWidth())
                         }
                     }
+                    MetricsBar(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        odometerKm = 1234,
+                        batteryPercent = 78,
+                        rangeKm = 92,
+                        temperatureC = 32
+                    )
+                    }
                     if (uiState.speedWasInvalid) {
                         Text(
                             "Invalid speed received • showing 0 km/h",
@@ -95,7 +103,6 @@ fun DashboardContent(uiState: VehicleUiState, modifier: Modifier = Modifier) {
                         )
                     }
                 } else {
-                    // Hide all live-looking values, including motor/kill-switch status.
                     SignalUnavailable(uiState.signalStatus)
                 }
             }

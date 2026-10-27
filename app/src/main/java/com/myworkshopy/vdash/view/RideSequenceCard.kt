@@ -37,7 +37,6 @@ fun RideSequenceCard(currentStage: Int, modifier: Modifier = Modifier) {
             modifier = Modifier.padding(start = 8.dp))
         Spacer(Modifier.weight(1f))
         Canvas(Modifier.fillMaxWidth().height(28.dp)) {
-            // Indicator centres and label centres use the same five equal columns.
             val step = size.width / rideStages.size
             val y = size.height / 2
             for (index in 0 until rideStages.lastIndex) {
