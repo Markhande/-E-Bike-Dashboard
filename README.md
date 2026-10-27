@@ -1,21 +1,99 @@
-# E-Bike Dashboard
+# V Dash - Android Vehicle HMI
 
-## Screenshots
+A landscape Android dashboard built with Kotlin and Jetpack Compose. It displays vehicle speed, motor status, kill-switch status, and the current ride scenario using a simulated data source.
 
-<table>
-  <tr>
-    <td align="center"><img src="docs/screenshots/parked.png" alt="Parked state" width="100%"></td>
-    <td align="center"><img src="docs/screenshots/ready.png" alt="Ready state" width="100%"></td>
-    <td align="center"><img src="docs/screenshots/riding.png" alt="Riding state" width="100%"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Parked</b><br>0 km/h, motor OFF</td>
-    <td align="center"><b>Ready</b><br>0 km/h, motor ON</td>
-    <td align="center"><b>Riding</b><br>25 km/h, motor ON</td>
-  </tr>
-</table>
+No vehicle hardware, CAN integration, backend, or account setup is required to run the demo.
 
-| File | Responsibility |
+## Features
+
+- Speedometer with a numeric km/h reading and animated gauge.
+- Motor ON/OFF and kill-switch Active/Inactive indicators.
+- Ride-state card and five-stage sequence indicator.
+- Automatic state updates through Coroutines, Flow, and StateFlow.
+- Lifecycle-aware state collection in Compose.
+- Waiting, stale-data, and unavailable-data screens.
+- Negative-speed handling with a visible warning.
+- Optional bottom metrics bar with fixed demo values: ODO 1,234 km, battery 78%, estimated range 92 km, and temperature 32 °C.
+
+## Tech stack
+
+- Kotlin and Jetpack Compose / Material 3
+- AndroidX ViewModel and lifecycle-aware Compose collection
+- Kotlin Coroutines and Flow / StateFlow
+- Hilt dependency injection with KSP
+- JUnit 4 and kotlinx-coroutines-test
+
+## Build and run
+
+### Prerequisites
+
+Use an Android Studio installation compatible with the versions declared in the project:
+
+| Setting | Current configuration |
+| --- | --- |
+| Android Gradle Plugin | 9.3.3 |
+| Gradle wrapper | 9.8.0 |
+| Kotlin | 2.4.21 |
+| Gradle daemon JVM toolchain | JDK 25 |
+| Java source/target compatibility | Java 11 |
+| Compile SDK | API 37 |
+| Target SDK | API 35 |
+| Minimum Android version | API 24 / Android 7.0 |
+
+The daemon JVM requirement and Java source compatibility are different settings. The daemon toolchain is configured in `gradle/gradle-daemon-jvm.properties`.
+
+Install Android SDK Platform 37 through SDK Manager. A compatible emulator system image or an Android device running API 24 or later is needed to launch the app. Internet access may be required for the initial Gradle, toolchain, and dependency downloads.
+
+### Android Studio
+
+1. Clone or download this repository.
+2. Open the directory containing `settings.gradle.kts`.
+3. Let Android Studio configure the local SDK location and complete Gradle sync.
+4. Create/start an Android emulator, or connect a device with USB debugging enabled.
+5. Select the `app` run configuration and press **Run**.
+
+The main activity requests landscape orientation and hides system bars for the instrument-cluster display.
+
+### Command line
+
+Run these commands from the project root:
+
+```bash
+./gradlew :app:assembleDebug
+```
+
+The debug APK is generated at:
+
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+To install it on a connected emulator or device:
+
+```bash
+./gradlew :app:installDebug
+```
+
+Launch **V Dash** from the device launcher. On Windows, use `gradlew.bat` instead of `./gradlew`. If the wrapper is not executable on macOS/Linux, run `chmod +x gradlew` once.
+
+## Architecture
+
+```text
+SimulatedVehicleRepository
+        |
+        | Flow<VehicleUiState> through VehicleRepository
+        v
+VehicleViewModel
+        |
+        | StateFlow<VehicleUiState>
+        v
+Dashboard (collectAsStateWithLifecycle)
+        |
+        v
+DashboardContent and reusable cards
+```
+
+| Component | Responsibility |
 | --- | --- |
 | `model/VehicleUiState.kt` | Vehicle readings, ride scenario, signal availability, and invalid-speed flag |
 | `repository/VehicleRepository.kt` | Data-provider interface |
@@ -112,15 +190,6 @@ On a landscape Android emulator:
 
 The unit tests exercise the timeout and error paths using controlled providers. The default simulator does not deliberately inject failures. There is no dedicated automated dashboard UI test suite, and final emulator visual acceptance remains to be completed.
 
-## Assumptions and limitations
-
-- This is an HMI demonstration, not production vehicle-control software.
-- The speedometer scale is 0-120 km/h; the current gauge implementation clamps displayed speed to that range.
-- Ride scenarios come from the simulated provider rather than being inferred from speed or motor status.
-- Readings use integer speed values and a fixed three-second freshness timeout.
-- The dashboard is designed for landscape and scales from a reference layout; small displays and enlarged system fonts need visual checks.
-- Odometer, battery, estimated range, and temperature are static dummy values.
-- No hardware transport, persistence, backend integration, or automatic retry after a terminated stream is implemented.
 
 ## Submission checklist
 
