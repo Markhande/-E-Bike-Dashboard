@@ -6,6 +6,16 @@ No vehicle hardware, CAN integration, backend, or account setup is required to r
 
 This README describes the inspected implementation. For the detailed, proposed real-vehicle migration, see [VHAL integration guide](VHAL_INTEGRATION.md). VHAL support is not implemented in the current app.
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/parked.png" alt="Parked state" width="100%"><br><b>Parked</b><br>0 km/h, motor OFF</td>
+    <td align="center"><img src="docs/screenshots/ready.png" alt="Ready state" width="100%"><br><b>Ready</b><br>0 km/h, motor ON</td>
+    <td align="center"><img src="docs/screenshots/riding.png" alt="Riding state" width="100%"><br><b>Riding</b><br>25 km/h, motor ON</td>
+  </tr>
+</table>
+
 ## Documentation map
 
 - This README: current features, source walkthrough, setup, simulation, tests and submission status.
