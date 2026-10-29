@@ -44,7 +44,7 @@ class SimulatedVehicleRepository : VehicleRepository {
         while (true) {
             for (state in states) {
                 emit(state)
-                delay(2_000L)
+                delay(1_000L)
             }
         }
     }
